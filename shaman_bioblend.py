@@ -33,7 +33,31 @@ import requests
 #import keyring
 import tarfile
 import zipfile
+import lockfile
+import datetime
 
+class FullPaths(argparse.Action):
+    """Expand user- and relative-paths"""
+    def __call__(self, parser, namespace, values, option_string=None):
+        # If false then its a list
+        if not isinstance(values, str):
+            out = []
+            for val in values:
+                if os.path.isfile(val):
+                    out += [os.path.abspath(os.path.expanduser(val))]
+                elif os.path.isdir(val):
+                    out += [os.path.abspath(os.path.expanduser(val)) + os.sep]
+                else:
+                    out += [val]
+            setattr(namespace, self.dest, out)
+        # Value is a string
+        else:
+            if os.path.isfile(values):
+                setattr(namespace, self.dest,
+                        os.path.abspath(os.path.expanduser(values)))
+            elif os.path.isdir(values):
+                setattr(namespace, self.dest,
+                        os.path.abspath(os.path.expanduser(values)) + os.sep)
 
 class galaxy(Thread):
 
@@ -127,21 +151,21 @@ class galaxy(Thread):
         collection_description = {'collection_type': 'list',
                                    'element_identifiers': [],
                                    'name': "collection_{0}".format(str(os.getpid()))}
-        for i,file in enumerate(glob.glob('{0}/*.f*q*'.format(path))):
+        for i,fastq_file in enumerate(glob.glob('{0}/*.f*q*'.format(path))):
             if lib:
                 lib_dataset = self.gi.libraries.upload_file_from_local_path(
-                            lib['id'], file)
+                            lib['id'], fastq_file)
                 # move the data in the history
                 dataset = self.gi.histories.upload_dataset_from_library(
                                 history['id'], lib_dataset[0]['id'])
             else:
-                dataset = self.gi.tools.upload_file(file, history_id)
+                dataset = self.gi.tools.upload_file(fastq_file, history_id)
             # Add dataset in the collection
             collection_description['element_identifiers'].append(
                 {'id': dataset['outputs'][0]["id"],
                 'name': "element {0}".format(i),
                 'src': 'hda'})
-        return collection_description, i
+        return collection_description#, i
 
     def paired_process(self, history, lib=None):
         """
@@ -151,9 +175,11 @@ class galaxy(Thread):
         fasta_dataset = self.gi.tools.upload_file(
             self.data_task["contaminant"], history['id'])
         # Upload fastq
-        collection_description_R1, count_r1 = self.send_fastq(
+        # , count_r1
+        collection_description_R1 = self.send_fastq(
             history['id'], self.data_task["path_R1"], lib)
-        collection_description_R2, count_r2 = self.send_fastq(
+        # , count_r2
+        collection_description_R2 = self.send_fastq(
             history['id'], self.data_task["path_R2"], lib)
         # Create collection
         collection_R1 = self.gi.histories.create_dataset_collection(
@@ -184,7 +210,7 @@ class galaxy(Thread):
         # Dataset input
         dataset_map[input_fasta] = {'id':fasta_dataset['outputs'][0]['id'],
                                     'src':'hda'}
-        return workflow, dataset_map, count_r1 + count_r2
+        return workflow, dataset_map#, count_r1 + count_r2
 
     def single_process(self, history, lib=None):
         """Load fastq, create collection and identify workflow
@@ -194,8 +220,10 @@ class galaxy(Thread):
         fasta_dataset = self.gi.tools.upload_file(
             self.data_task["contaminant"], history['id'])
         # Upload fastq
-        collection_description, count_fastq = self.send_fastq(
-            history['id'], self.data_task["path"], lib)
+        #, count_fastq
+        collection_description = self.send_fastq(history['id'],
+                                                 self.data_task["path"],
+                                                 lib)
         # Create collection
         collection = self.gi.histories.create_dataset_collection(
             history['id'], collection_description)
@@ -221,7 +249,7 @@ class galaxy(Thread):
         # Dataset input
         dataset_map[input_fasta] = {'id' : fasta_dataset['outputs'][0]['id'],
                                     'src' : 'hda'}
-        return workflow, dataset_map, count_fastq
+        return workflow, dataset_map#, count_fastq
 
     def reconnect(self):
         """Reconnect to galaxy
@@ -229,9 +257,8 @@ class galaxy(Thread):
         self.gi = GalaxyInstance(url=self.galaxy_url, key=self.galaxy_key)
         self.gi.verify = False
 
-    def check_progress(self, history, count_fastq):
+    def check_progress(self, history, glob_progress=0.0, prev_progress=0.0):
         """Check progression
-        count_fastq useless 
         """
         progress_file = (self.doing_dir + os.sep + self.data_task["name"]
                          + "_progress.txt")
@@ -240,31 +267,45 @@ class galaxy(Thread):
             if history:
                 # Check status
                 while not job_done:
+                    progress_story = self.gi.histories.get_status(history['id'])
+                    #new_progress = float(self.gi.histories.get_status(history['id'])['percent_complete'])
+                    new_progress = float(progress_story['percent_complete'])
+                    if prev_progress > new_progress:
+                        glob_progress = 100.0 + new_progress
+                        prev_progress = glob_progress
+                    else:
+                        glob_progress = glob_progress + (new_progress - prev_progress)
+                        prev_progress = new_progress
                     with open(progress_file, "wt") as progress:
-                        progress.write("{0}".format(self.gi.histories.get_status(history['id'])['percent_complete']))
-                    print("progression {0}".format(self.gi.histories.get_status(history['id'])['percent_complete']))
+                        progress.write("{0}".format(glob_progress * 0.5))
+                    
+                    #print("progression {0}".format(self.gi.histories.get_status(history['id'])['percent_complete']))
+                    #print("progression {0}".format(glob_progress))
+                    #print("progression {0}".format(glob_progress * 0.5))
+                    #print(progress_story['state'])
                     # Success
-                    if self.gi.histories.get_status(history['id'])['state'] == "ok":
+                    if progress_story['state'] == "ok":
                         job_done = True
-                        print("====================Job Done===========================")
-                        self.logger.info(self.gi.histories.get_status(history['id']))
+                        #print("====================Job Done===========================")
+                        self.logger.info(progress_story)
                     # fail 
-                    elif self.gi.histories.get_status(history['id'])['state'] == "error": 
-                        self.logger.error(self.gi.histories.get_status(history['id']))
+                    elif progress_story['state'] == "error": 
+                        self.logger.error(progress_story)
                         shutil.move(progress_file, self.error_dir +  
                             os.path.basename(progress_file))
+                        #message = "Error on " + 'shaman_' + str(os.getpid())+ "_" + str(self.num_job)
+                        #self.send_mail(message)
                         # error mail
                         break
-                    elif self.gi.histories.get_status(history['id'])['state_details']['error'] > 0:
-                        message = "Error on " + 'shaman_' + str(os.getpid())+ "_" + str(self.num_job)
-                        #self.send_mail(message)
+                    #elif progress_story['state_details']['error'] > 0:
+                        
                     else:
-                        self.logger.info(self.gi.histories.get_status(history['id']))
+                        self.logger.info(progress_story)
                     time.sleep(30)                   
         except bioblend.ConnectionError:
             time.sleep(5)
             self.reconnect()
-            job_done = self.check_progress(history, count_fastq)
+            job_done = self.check_progress(history, glob_progress, prev_progress)
         except IOError:
             self.logger.error("Error cannot open {0}".format(progress_file))
         return job_done
@@ -297,6 +338,8 @@ class galaxy(Thread):
             os.mkdir(path)
         with tarfile.open(result_file) as tar:
             tar.extractall(path, self.get_members(tar, "datasets"))
+        print("remove " + result_file)
+        os.remove(result_file)
         # Rename
         for file in glob.glob('{0}/*'.format(path)):
             split_name = os.path.splitext(os.path.basename(file))
@@ -368,7 +411,7 @@ class galaxy(Thread):
     def run(self):
         """Upload, run galaxy workflow and dowload results
         """
-        count_fastq = 0
+        #count_fastq = 0
         lib = None
         param = None
         jeha_id = ""
@@ -396,19 +439,22 @@ class galaxy(Thread):
                     if (self.check_file_size(self.data_task["path_R1"]) or 
                         self.check_file_size(self.data_task["path_R2"])):
                         lib = self.gi.libraries.create_library(lib_name)
-                        workflow, dataset_map, count_fastq = self.paired_process(
+                        #, count_fastq
+                        workflow, dataset_map = self.paired_process(
                             data_history, lib)
                     else:
-                        workflow, dataset_map, count_fastq = self.paired_process(
-                            data_history)
+                        #, count_fastq
+                        workflow, dataset_map = self.paired_process(data_history)
                 else:
                     # Check file size
                     if self.check_file_size(self.data_task["path"]):
                         lib = self.gi.libraries.create_library(lib_name)
-                        workflow, dataset_map, count_fastq = self.single_process(
+                        #, count_fastq
+                        workflow, dataset_map = self.single_process(
                             data_history, lib)
                     else:
-                        workflow, dataset_map, count_fastq = self.single_process(data_history)
+                        #, count_fastq
+                        workflow, dataset_map = self.single_process(data_history)
             except:
                 self.logger.error("Job failed to submit data for history {0}"
                     .format(data_history_name))
@@ -445,15 +491,18 @@ class galaxy(Thread):
                 self.logger.error(sys.exc_info()[1])
                 shutil.move(self.task_file, self.error_dir +  
                             os.path.basename(self.task_file))
+                message = "Workflow failed to start for the key {0}".format(self.data_task["name"])
+                self.send_mail(message)
                 # handle error message
-                print("Submission failed", file=sys.stderr)
-                #delete_history
-                #if lib:
-                #   self.gi.libraries.delete_library(lib['id'])
-                #self.gi.histories.delete_history(result_history['id'], purge=True)
+                #print("Submission failed", file=sys.stderr)
+                # Delete history
+                if lib:
+                   self.gi.libraries.delete_library(lib['id'])
+                self.gi.histories.delete_history(data_history['id'], purge=True)
+                self.gi.histories.delete_history(result_history['id'], purge=True)
                 result_history = None
-            
-            if self.check_progress(result_history, count_fastq):
+            #, count_fastq 
+            if self.check_progress(result_history):
                 # Remove reads after success
                 self.logger.info("Workflow finished work for {0} : {1}".format(
                     data_history_name, result_history['id']))
@@ -472,12 +521,13 @@ class galaxy(Thread):
                     self.zip_archive(result_file, zip_file)
                     # Send email
                     # solve file size problem
-                    message = "Shaman result is available here for the key {0}".format(self.data_task["name"])
-                    #self.send_mail(message, zip_file)
+                    message = "Shaman result is available for the key {0}".format(self.data_task["name"])
+                    self.send_mail(message, zip_file)
                     # Delete_history
-                    #if lib:
-                    #   self.gi.libraries.delete_library(lib['id'])
-                    #self.gi.histories.delete_history(result_history['id'], purge=True)
+                    if lib:
+                       self.gi.libraries.delete_library(lib['id'])
+                    self.gi.histories.delete_history(data_history['id'], purge=True)
+                    self.gi.histories.delete_history(result_history['id'], purge=True)
                     shutil.move(self.task_file, self.done_dir + 
                             os.path.basename(self.task_file))
                 else:
@@ -485,23 +535,28 @@ class galaxy(Thread):
                         .format(result_history_name))
                     shutil.move(self.task_file, self.error_dir +  
                                 os.path.basename(self.task_file))
+                    message = "Workflow failed to download the results for the key {0}".format(self.data_task["name"])
+                    self.send_mail(message)
                     # handle error message
                     print("Job failed during download", file=sys.stderr)
             else:
                 self.logger.error("Job is in error state for history {0}"
                     .format(result_history_name))
-                print(self.task_file)
-                print(self.error_dir+os.path.basename(self.task_file))
+                message = "Workflow failed during progression for the key {0}".format(self.data_task["name"])
+                self.send_mail(message)
+                #print(self.task_file)
+                #print(self.error_dir+os.path.basename(self.task_file))
                 if(os.path.isfile(self.task_file)):
                     shutil.move(self.task_file, self.error_dir +  
                                 os.path.basename(self.task_file))
                 # handle error message
-                print("Job failed during execution", file=sys.stderr)
+                #print("Job failed during execution", file=sys.stderr)
                 #delete_library
-                #if lib:
-                #   self.gi.libraries.delete_library(lib['id'])
+                if lib:
+                   self.gi.libraries.delete_library(lib['id'])
                 #delete_history
-                #self.gi.histories.delete_history(result_history['id'], purge=True)
+                self.gi.histories.delete_history(data_history['id'], purge=True)
+                self.gi.histories.delete_history(result_history['id'], purge=True)
 
 def isdir(path):
     """Check if path is an existing file.
@@ -525,26 +580,23 @@ def getArguments():
     parser = argparse.ArgumentParser(description=__doc__, usage=
                                      "{0} -h".format(sys.argv[0]))
     parser.add_argument('-u', dest='galaxy_url', type=str, #required=True,
-                        default='https://galaxy-dev.web.pasteur.fr',
-                        #default='http://127.0.0.1:8080',
+                        #default='https://galaxy-dev.web.pasteur.fr',
+                        default='http://127.0.0.1:8080',
                         help='Url to galaxy.')
     parser.add_argument('-k', dest='galaxy_key', type=str, #required=True,
                         #default=keyring.get_password("galaxy", "aghozlan"),
-                        default='7ac30484f696937116f960531a05c2b6',
-                        #default='a02fb1213a8e22fbfdb4d56e27e41189',
+                        #default='7ac30484f696937116f960531a05c2b6',
+                        default='a02fb1213a8e22fbfdb4d56e27e41189',
                         help='User galaxy key.')
     parser.add_argument('-w', dest='work_dir', type=isdir, required=True,
-                        help='Path to the top directory.')
+                        action=FullPaths, help='Path to the top directory.')
     args = parser.parse_args()
     return args
 
 
-def get_log():
+def get_log(path_log):
     """
     """
-    path_log = (tempfile.gettempdir() + os.sep + "shaman_" 
-                + str(os.getpid()) + ".log")
-    print(path_log)
     logger = logging.getLogger()
     logger.setLevel(logging.DEBUG)
     formatter = logging.Formatter('%(asctime)s :: %(levelname)s :: %(message)s')
@@ -575,7 +627,7 @@ def create_dir(list_dir):
         pass
 
 
-def pandaemonium(logger, galaxy_url, galaxy_key, work_dir):
+def pandaemonium(path_log, galaxy_url, galaxy_key, work_dir):
     """Daemon function that should do something
     """
     todo_dir = work_dir + os.sep + "todo" + os.sep
@@ -584,6 +636,9 @@ def pandaemonium(logger, galaxy_url, galaxy_key, work_dir):
     error_dir = work_dir + os.sep + "error" + os.sep
     todo_list = []
     num_job = 0
+
+    logger = get_log(path_log)
+    logger.info("Let's start to work")
     # Create important dir
     create_dir([todo_dir, doing_dir, done_dir, error_dir])
     # Start daemon activity
@@ -607,11 +662,23 @@ def main():
     """Main program
     """
     args = getArguments()
-    logger = get_log()
-    logger.info("Let's start to work")
-    
-    #with daemon.DaemonContext():   
-    pandaemonium(logger, args.galaxy_url, args.galaxy_key, args.work_dir)
+    now = datetime.datetime.now()
+    # Check if root
+    if os.geteuid() != 0:
+        path_log = (tempfile.gettempdir() + os.sep + "shaman_bioblend_" +
+                    now.strftime("%Y%m%d_%H%M") + ".log")
+    else:
+        create_dir(["/var/log/shaman_bioblend"])
+        path_log = ("/var/log/shaman_bioblend/shaman_bioblend_" +
+                    now.strftime("%Y%m%d_%H%M") + ".log")
+    # Start Daemon
+    with daemon.DaemonContext(working_directory=os.curdir,
+                              pidfile=lockfile.FileLock(path_log),
+                              stdout=sys.stdout, stderr=sys.stderr):
+        #detach_process=False
+        print("PID: {0}".format(os.getpid()))
+        print("Path to log file: {0}".format(path_log))
+        pandaemonium(path_log, args.galaxy_url, args.galaxy_key, args.work_dir)
 
 
 if __name__ == '__main__':
