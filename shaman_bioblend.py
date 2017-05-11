@@ -264,7 +264,6 @@ class galaxy(Thread):
                          + "_progress.txt")
         job_done = False
         try:
-            if history:
                 # Check status
                 while not job_done:
                     progress_story = self.gi.histories.get_status(history['id'])
@@ -461,6 +460,12 @@ class galaxy(Thread):
                 self.logger.error(sys.exc_info()[1])
                 shutil.move(self.task_file, self.error_dir +  
                             os.path.basename(self.task_file))
+                if lib:
+                   self.gi.libraries.delete_library(lib['id'])
+                #delete_history
+                if data_history:
+                    self.gi.histories.delete_history(data_history['id'], purge=True)
+                
             # Run workflow
             try:
                 if dataset_map:
@@ -496,67 +501,73 @@ class galaxy(Thread):
                 # handle error message
                 #print("Submission failed", file=sys.stderr)
                 # Delete history
-                if lib:
-                   self.gi.libraries.delete_library(lib['id'])
-                self.gi.histories.delete_history(data_history['id'], purge=True)
-                self.gi.histories.delete_history(result_history['id'], purge=True)
-                result_history = None
-            #, count_fastq 
-            if self.check_progress(result_history):
-                # Remove reads after success
-                self.logger.info("Workflow finished work for {0} : {1}".format(
-                    data_history_name, result_history['id']))
-                # Build archive
-                while jeha_id == "":
-                    jeha_id = self.gi.histories.export_history(result_history['id'])
-                    time.sleep(5)
-                # Download archive
-                download_success = self.download_result(result_history['id'], 
-                                                       jeha_id, result_file)
-                # Send mail
-                if os.path.isfile(result_file) and download_success:
-                    self.logger.info("Download succeded for {0} : {1}".format(
-                    data_history_name, result_history['id']))
-                    # Prepare zip
-                    self.zip_archive(result_file, zip_file)
-                    # Send email
-                    # solve file size problem
-                    message = "Shaman result is available for the key {0}".format(self.data_task["name"])
-                    self.send_mail(message, zip_file)
-                    # Delete_history
-                    if lib:
-                       self.gi.libraries.delete_library(lib['id'])
-                    self.gi.histories.delete_history(data_history['id'], purge=True)
-                    self.gi.histories.delete_history(result_history['id'], purge=True)
-                    shutil.move(self.task_file, self.done_dir + 
-                            os.path.basename(self.task_file))
-                else:
-                    self.logger.error("Failed to download result file for {0}"
-                        .format(result_history_name))
-                    shutil.move(self.task_file, self.error_dir +  
-                                os.path.basename(self.task_file))
-                    message = "Workflow failed to download the results for the key {0}".format(self.data_task["name"])
-                    self.send_mail(message)
-                    # handle error message
-                    print("Job failed during download", file=sys.stderr)
-            else:
-                self.logger.error("Job is in error state for history {0}"
-                    .format(result_history_name))
-                message = "Workflow failed during progression for the key {0}".format(self.data_task["name"])
-                self.send_mail(message)
-                #print(self.task_file)
-                #print(self.error_dir+os.path.basename(self.task_file))
-                if(os.path.isfile(self.task_file)):
-                    shutil.move(self.task_file, self.error_dir +  
-                                os.path.basename(self.task_file))
-                # handle error message
-                #print("Job failed during execution", file=sys.stderr)
-                #delete_library
-                if lib:
+                if lib:     
                    self.gi.libraries.delete_library(lib['id'])
                 #delete_history
-                self.gi.histories.delete_history(data_history['id'], purge=True)
-                self.gi.histories.delete_history(result_history['id'], purge=True)
+                if data_history:
+                    self.gi.histories.delete_history(data_history['id'], purge=True)
+                if result_history:
+                    self.gi.histories.delete_history(result_history['id'], purge=True)
+                result_history = None
+            #, count_fastq
+            if result_history:
+                if self.check_progress(result_history):
+                    # Remove reads after success
+                    self.logger.info("Workflow finished work for {0} : {1}".format(
+                        data_history_name, result_history['id']))
+                    # Build archive
+                    while jeha_id == "":
+                        jeha_id = self.gi.histories.export_history(result_history['id'])
+                        time.sleep(5)
+                    # Download archive
+                    download_success = self.download_result(result_history['id'], 
+                                                           jeha_id, result_file)
+                    # Send mail
+                    if os.path.isfile(result_file) and download_success:
+                        self.logger.info("Download succeded for {0} : {1}".format(
+                        data_history_name, result_history['id']))
+                        # Prepare zip
+                        self.zip_archive(result_file, zip_file)
+                        # Send email
+                        # solve file size problem
+                        message = "Shaman result is available for the key {0}".format(self.data_task["name"])
+                        self.send_mail(message, zip_file)
+                        # Delete_history
+                        if lib:
+                           self.gi.libraries.delete_library(lib['id'])
+                        self.gi.histories.delete_history(data_history['id'], purge=True)
+                        self.gi.histories.delete_history(result_history['id'], purge=True)
+                        shutil.move(self.task_file, self.done_dir + 
+                                os.path.basename(self.task_file))
+                    else:
+                        self.logger.error("Failed to download result file for {0}"
+                            .format(result_history_name))
+                        shutil.move(self.task_file, self.error_dir +  
+                                    os.path.basename(self.task_file))
+                        message = "Workflow failed to download the results for the key {0}".format(self.data_task["name"])
+                        self.send_mail(message)
+                        # handle error message
+                        print("Job failed during download", file=sys.stderr)
+                else:
+                    self.logger.error("Job is in error state for history {0}"
+                        .format(result_history_name))
+                    message = "Workflow failed during progression for the key {0}".format(self.data_task["name"])
+                    self.send_mail(message)
+                    #print(self.task_file)
+                    #print(self.error_dir+os.path.basename(self.task_file))
+                    if(os.path.isfile(self.task_file)):
+                        shutil.move(self.task_file, self.error_dir +  
+                                    os.path.basename(self.task_file))
+                    # handle error message
+                    #print("Job failed during execution", file=sys.stderr)
+                    #delete_library
+                    if lib:
+                       self.gi.libraries.delete_library(lib['id'])
+                    #delete_history
+                    if data_history:
+                        self.gi.histories.delete_history(data_history['id'], purge=True)
+                    if result_history:
+                        self.gi.histories.delete_history(result_history['id'], purge=True)
 
 def isdir(path):
     """Check if path is an existing file.
