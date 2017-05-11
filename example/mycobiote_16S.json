@@ -1,9 +1,8 @@
 {
   "paired": false,
-  "path": "/home/aghozlan/test_galaxy/single",
-  "host": "hg18",
+  "path": "/home/aghozlan/test_galaxy/mycobiote_16S",
+  "host": "",
   "type": "16S_18S",
-  "result": "/home/aghozlan/test_galaxy/res",
   "mail": "amine.ghozlane@pasteur.fr",
   "contaminant": "/home/aghozlan/workspace/shaman_bioblend/alienTrimmerPF8contaminants.fasta"
 }

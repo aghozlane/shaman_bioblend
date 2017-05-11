@@ -4,7 +4,6 @@
   "path_R2": "/home/aghozlan/test_galaxy/r2",
   "host": "human",
   "type": "16S/18S",
-  "result": "/home/aghozlan/test_galaxy/res"
   "contaminant_R1": "/home/aghozlan/workspace/shaman_bioblend/alienTrimmerPF8contaminants_R1.fasta",
   "contaminant_R2": "/home/aghozlan/workspace/shaman_bioblend/alienTrimmerPF8contaminants_R2.fasta"
 }
