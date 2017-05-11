@@ -580,13 +580,13 @@ def getArguments():
     parser = argparse.ArgumentParser(description=__doc__, usage=
                                      "{0} -h".format(sys.argv[0]))
     parser.add_argument('-u', dest='galaxy_url', type=str, #required=True,
-                        #default='https://galaxy-dev.web.pasteur.fr',
-                        default='http://127.0.0.1:8080',
+                        default='https://galaxy-dev.web.pasteur.fr',
+                        #default='http://127.0.0.1:8080',
                         help='Url to galaxy.')
     parser.add_argument('-k', dest='galaxy_key', type=str, #required=True,
                         #default=keyring.get_password("galaxy", "aghozlan"),
-                        #default='7ac30484f696937116f960531a05c2b6',
-                        default='a02fb1213a8e22fbfdb4d56e27e41189',
+                        default='7ac30484f696937116f960531a05c2b6',
+                        #default='a02fb1213a8e22fbfdb4d56e27e41189',
                         help='User galaxy key.')
     parser.add_argument('-w', dest='work_dir', type=isdir, required=True,
                         action=FullPaths, help='Path to the top directory.')
