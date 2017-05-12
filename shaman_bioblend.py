@@ -86,7 +86,7 @@ class galaxy(Thread):
                     data_task = json.load(task)
                     if isinstance(data_task, (list, tuple)):
                         data_task = data_task[0]
-                    data_task["name"] = os.path.splitext(os.path.basename(self.task_file))[0].replace("file", "")
+                    data_task["name"] = os.path.splitext(os.path.basename(self.task_file))[0]
                     if "paired" not in data_task:
                         raise ValueError("Paired information is missing in {0}".format(self.task_file))
                     isinstance(data_task["paired"], bool)
@@ -498,7 +498,7 @@ class galaxy(Thread):
                 self.logger.error(sys.exc_info()[1])
                 shutil.move(self.task_file, self.error_dir +  
                             os.path.basename(self.task_file))
-                message = "Workflow failed to start for the key {0}".format(self.data_task["name"])
+                message = "Workflow failed to start for the key {0}".format(self.data_task["name"].replace("file", ""))
                 self.send_mail(message)
                 # handle error message
                 #print("Submission failed", file=sys.stderr)
@@ -546,14 +546,14 @@ class galaxy(Thread):
                             .format(result_history_name))
                         shutil.move(self.task_file, self.error_dir +  
                                     os.path.basename(self.task_file))
-                        message = "Workflow failed to download the results for the key {0}".format(self.data_task["name"])
+                        message = "Workflow failed to download the results for the key {0}".format(self.data_task["name"].replace("file", ""))
                         self.send_mail(message)
                         # handle error message
                         print("Job failed during download", file=sys.stderr)
                 else:
                     self.logger.error("Job is in error state for history {0}"
                         .format(result_history_name))
-                    message = "Workflow failed during progression for the key {0}".format(self.data_task["name"])
+                    message = "Workflow failed during progression for the key {0}".format(self.data_task["name"].replace("file", ""))
                     self.send_mail(message)
                     #print(self.task_file)
                     #print(self.error_dir+os.path.basename(self.task_file))
