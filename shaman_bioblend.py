@@ -287,8 +287,10 @@ class galaxy(Thread):
                         job_done = True
                         #print("====================Job Done===========================")
                         self.logger.info(progress_story)
+                        shutil.move(progress_file, self.done_dir +  
+                            os.path.basename(progress_file))
                     # fail 
-                    elif progress_story['state'] == "error": 
+                    elif progress_story['state'] == "error" or progress_story['state_details']['error'] > 0: 
                         self.logger.error(progress_story)
                         shutil.move(progress_file, self.error_dir +  
                             os.path.basename(progress_file))
@@ -601,6 +603,8 @@ def getArguments():
                         help='User galaxy key.')
     parser.add_argument('-w', dest='work_dir', type=isdir, required=True,
                         action=FullPaths, help='Path to the top directory.')
+    parser.add_argument('-i', dest='interactive_mode', action='store_false',
+                        default=True, help='Do not detatch process.')
     args = parser.parse_args()
     return args
 
@@ -685,8 +689,8 @@ def main():
     # Start Daemon
     with daemon.DaemonContext(working_directory=os.curdir,
                               pidfile=lockfile.FileLock(path_log),
-                              stdout=sys.stdout, stderr=sys.stderr):
-        #detach_process=False
+                              stdout=sys.stdout, stderr=sys.stderr,
+                              detach_process=args.interactive_mode):
         print("PID: {0}".format(os.getpid()))
         print("Path to log file: {0}".format(path_log))
         pandaemonium(path_log, args.galaxy_url, args.galaxy_key, args.work_dir)
