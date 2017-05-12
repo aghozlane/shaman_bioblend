@@ -287,13 +287,9 @@ class galaxy(Thread):
                         job_done = True
                         #print("====================Job Done===========================")
                         self.logger.info(progress_story)
-                        shutil.move(progress_file, self.done_dir +  
-                            os.path.basename(progress_file))
                     # fail 
                     elif progress_story['state'] == "error" or progress_story['state_details']['error'] > 0: 
                         self.logger.error(progress_story)
-                        shutil.move(progress_file, self.error_dir +  
-                            os.path.basename(progress_file))
                         #message = "Error on " + 'shaman_' + str(os.getpid())+ "_" + str(self.num_job)
                         #self.send_mail(message)
                         # error mail
