@@ -151,7 +151,7 @@ class galaxy(Thread):
         collection_description = {'collection_type': 'list',
                                    'element_identifiers': [],
                                    'name': "collection_{0}".format(str(os.getpid()))}
-        for i,fastq_file in enumerate(glob.glob('{0}/*.f*q*'.format(path))):
+        for i,fastq_file in enumerate(sorted(glob.glob('{0}/*.f*q*'.format(path)))):
             if lib:
                 lib_dataset = self.gi.libraries.upload_file_from_local_path(
                             lib['id'], fastq_file)
