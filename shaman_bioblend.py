@@ -203,10 +203,8 @@ class galaxy(Thread):
         dataset_map[input_collection_R2] = {'id':collection_R2['id'],
                                             'src':'hdca'}
         # Get contaminant input                                                 
-        input_fasta_R1 = self.gi.workflows.get_workflow_inputs(
-            workflow[0]['id'], label='contaminant_dataset_R1')[0]
-        input_fasta_R2 = self.gi.workflows.get_workflow_inputs(
-            workflow[0]['id'], label='contaminant_dataset_R2')[0]
+        input_fasta = self.gi.workflows.get_workflow_inputs(
+            workflow[0]['id'], label='contaminant_dataset')[0]
         # Dataset input
         dataset_map[input_fasta] = {'id':fasta_dataset['outputs'][0]['id'],
                                     'src':'hda'}

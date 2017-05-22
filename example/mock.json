@@ -2,7 +2,7 @@
   "paired": true,
   "path_R1": "/home/aghozlan/test_galaxy/mock_R1",
   "path_R2": "/home/aghozlan/test_galaxy/mock_R2",
-  "host": "hg38",
+  "host": "astephensi",
   "type": "16S_18S",
   "mail": "amine.ghozlane@pasteur.fr",
   "contaminant": "/home/aghozlan/workspace/shaman_bioblend/alienTrimmerPF8contaminants.fasta"
