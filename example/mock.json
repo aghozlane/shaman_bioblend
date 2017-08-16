@@ -5,5 +5,6 @@
   "host": "astephensi",
   "type": "16S_18S",
   "mail": "amine.ghozlane@pasteur.fr",
-  "contaminant": "/home/aghozlan/workspace/shaman_bioblend/alienTrimmerPF8contaminants.fasta"
+  "contaminant": "/home/aghozlan/workspace/shaman_bioblend/alienTrimmerPF8contaminants.fasta",
+  "pattern_R1": "_R1"
 }
