@@ -609,15 +609,15 @@ class galaxy(Thread):
                                     os.path.basename(self.task_file))
                         message = "Workflow failed to start for the key: {0}".format(self.data_task["name"].replace("file", ""))
                         self.send_mail(message)
-                        # Delete history
-                        if lib:     
-                           self.gi.libraries.delete_library(lib['id'])
-                        #delete_history
-                        if data_history:
-                            self.gi.histories.delete_history(data_history['id'], purge=True)
-                        if result_history:
-                            self.gi.histories.delete_history(result_history['id'], purge=True)
-                        result_history = None
+                        # # Delete history
+                        # if lib:     
+                        #    self.gi.libraries.delete_library(lib['id'])
+                        # #delete_history
+                        # if data_history:
+                        #     self.gi.histories.delete_history(data_history['id'], purge=True)
+                        # if result_history:
+                        #     self.gi.histories.delete_history(result_history['id'], purge=True)
+                        # result_history = None
             #, count_fastq
             if result_history:
                 if self.check_progress(result_history, 100.0):
@@ -672,14 +672,14 @@ class galaxy(Thread):
                     if(os.path.isfile(self.task_file)):
                         shutil.move(self.task_file, self.error_dir +  
                                     os.path.basename(self.task_file))
-                    # delete_library
-                    if lib:
-                      self.gi.libraries.delete_library(lib['id'])
-                    # delete_history
-                    if data_history:
-                       self.gi.histories.delete_history(data_history['id'], purge=True)
-                    if result_history:
-                       self.gi.histories.delete_history(result_history['id'], purge=True)
+                    # # delete_library
+                    # if lib:
+                    #   self.gi.libraries.delete_library(lib['id'])
+                    # # delete_history
+                    # if data_history:
+                    #    self.gi.histories.delete_history(data_history['id'], purge=True)
+                    # if result_history:
+                    #    self.gi.histories.delete_history(result_history['id'], purge=True)
 
 def isdir(path):
     """Check if path is an existing file.
