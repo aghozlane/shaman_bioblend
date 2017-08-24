@@ -328,9 +328,9 @@ class galaxy(Thread):
                             error_mess_list.append(error_mess)
 
                     message = ("The workflow failed during progression for the "
-                               "key {0}. Here are the error:"
-                               .format(self.data_task["name"].replace("file", "") +
-                                os.linesep + os.linesep.join(error_mess_list)))
+                               "key {0}.{1}{2}"
+                               .format(self.data_task["name"].replace("file", ""),
+                                os.linesep, os.linesep.join(error_mess_list)))
                     # error mail
                     self.send_mail(message)
                     break
@@ -549,65 +549,75 @@ class galaxy(Thread):
                             os.path.basename(self.task_file))
                 message = "Shaman failed to submit data for the history {0}".format(self.data_task["name"].replace("file", ""))
                 self.send_mail(message)
-                if lib:
-                   self.gi.libraries.delete_library(lib['id'])
-                #delete_history
-                if data_history:
-                    self.gi.histories.delete_history(data_history['id'], purge=True)
-                
+                # if lib:
+                #    self.gi.libraries.delete_library(lib['id'])
+                # #delete_history
+                # if data_history:
+                #     self.gi.histories.delete_history(data_history['id'], purge=True)
+                data_history = None
             # Run workflow
-            if self.check_progress(data_history):
-                try:
-                    if dataset_map:
-                        #result_history = data_history
-                        result_history = self.gi.histories.create_history(
-                                             name=result_history_name)
-                        self.logger.info("Load workflow for {0} : {1}".format(
-                        data_history_name, result_history['id']))
-                        if self.data_task['host'] != "" and self.data_task["paired"]:
-                            self.gi.workflows.invoke_workflow(
-                                workflow[0]['id'],
-                                inputs=dataset_map,
-                                params={"3":{"reference_genome|index":self.data_task["host"]},
-                                        "7":{'splitname': self.data_task["pattern_R1"]},
-                                        "25":{'paired': '{"pattern": "' + self.data_task["pattern_R1"] + '"}'}},
-                                history_id=result_history['id'])
-                        elif self.data_task['host'] == "" and self.data_task["paired"]:
-                            self.gi.workflows.invoke_workflow(
-                                workflow[0]['id'],
-                                inputs=dataset_map,
-                                params={"5":{'splitname': self.data_task["pattern_R1"]},
-                                        "22":{'paired': '{"pattern": "' + self.data_task["pattern_R1"] + '"}'}},
-                                history_id=result_history['id'])
-                        elif self.data_task['host'] != "" and not self.data_task["paired"]:
-                            self.gi.workflows.invoke_workflow(
-                                workflow[0]['id'],
-                                inputs=dataset_map,
-                                params={"2":{"reference_genome|index":self.data_task["host"]}},
-                                history_id=result_history['id'])
-                        else:
-                            self.gi.workflows.invoke_workflow(
-                                workflow[0]['id'],
-                                inputs=dataset_map,
-                                history_id=result_history['id'])
-                except:
-                    self.logger.error("Job failed at execution for the history: {0}"
-                        .format(result_history_name))
-                    self.logger.error(sys.exc_info()[1])
-                    shutil.move(self.task_file, self.error_dir +  
-                                os.path.basename(self.task_file))
-                    message = "Workflow failed to start for the key: {0}".format(self.data_task["name"].replace("file", ""))
-                    self.send_mail(message)
-                    # handle error message
-                    # Delete history
-                    if lib:     
-                       self.gi.libraries.delete_library(lib['id'])
-                    #delete_history
-                    if data_history:
-                        self.gi.histories.delete_history(data_history['id'], purge=True)
-                    if result_history:
-                        self.gi.histories.delete_history(result_history['id'], purge=True)
-                    result_history = None
+            if data_history:
+                if self.check_progress(data_history):
+                    try:
+                        if dataset_map:
+                            #result_history = data_history
+                            result_history = self.gi.histories.create_history(
+                                                 name=result_history_name)
+                            self.logger.info("Load workflow for {0} : {1}".format(
+                            data_history_name, result_history['id']))
+                            if self.data_task['host'] != "" and self.data_task["paired"]:
+                                params = {
+                                    "3":{"reference_genome|index":self.data_task["host"]},
+                                    "7":{'splitname': self.data_task["pattern_R1"]},
+                                         }
+                                if self.data_task["type"] == "16S_18S":
+                                    params["24"] = {'paired|pattern': self.data_task["pattern_R1"]}
+                                elif self.data_task["type"] == "23S_28S":
+                                    params["20"] = {'paired|pattern': self.data_task["pattern_R1"]}
+                                else:
+                                    params["28"] = {'paired|pattern': self.data_task["pattern_R1"]}
+                                print(params)
+                                self.gi.workflows.invoke_workflow(
+                                    workflow[0]['id'], inputs=dataset_map,
+                                    params=params, history_id=result_history['id'])
+                            elif self.data_task['host'] == "" and self.data_task["paired"]:
+                                params={"5":{'splitname': self.data_task["pattern_R1"]}}
+                                if self.data_task["type"] == "16S_18S":
+                                    params["21"] = {'paired|pattern' : self.data_task["pattern_R1"]}
+                                elif self.data_task["type"] == "23S_28S":
+                                    params["18"] = {'paired|pattern': self.data_task["pattern_R1"]}
+                                else:
+                                    params["26"] = {'paired|pattern': self.data_task["pattern_R1"]}
+                                print(params)
+                                self.gi.workflows.invoke_workflow(
+                                    workflow[0]['id'], inputs=dataset_map,
+                                    params=params, history_id=result_history['id'])
+                            elif self.data_task['host'] != "" and not self.data_task["paired"]:
+                                self.gi.workflows.invoke_workflow(
+                                    workflow[0]['id'], inputs=dataset_map,
+                                    params={"2":{"reference_genome|index":self.data_task["host"]}},
+                                    history_id=result_history['id'])
+                            else:
+                                self.gi.workflows.invoke_workflow(
+                                    workflow[0]['id'], inputs=dataset_map,
+                                    history_id=result_history['id'])
+                    except:
+                        self.logger.error("Job failed at execution for the history: {0}"
+                            .format(result_history_name))
+                        self.logger.error(sys.exc_info()[1])
+                        shutil.move(self.task_file, self.error_dir +  
+                                    os.path.basename(self.task_file))
+                        message = "Workflow failed to start for the key: {0}".format(self.data_task["name"].replace("file", ""))
+                        self.send_mail(message)
+                        # Delete history
+                        if lib:     
+                           self.gi.libraries.delete_library(lib['id'])
+                        #delete_history
+                        if data_history:
+                            self.gi.histories.delete_history(data_history['id'], purge=True)
+                        if result_history:
+                            self.gi.histories.delete_history(result_history['id'], purge=True)
+                        result_history = None
             #, count_fastq
             if result_history:
                 if self.check_progress(result_history, 100.0):
@@ -640,10 +650,10 @@ class galaxy(Thread):
                         shutil.move(self.task_file, self.done_dir + 
                                     os.path.basename(self.task_file))
                         # Delete_history
-                        # if lib:
-                        #    self.gi.libraries.delete_library(lib['id'])
-                        # self.gi.histories.delete_history(data_history['id'], purge=True)
-                        # self.gi.histories.delete_history(result_history['id'], purge=True)
+                        if lib:
+                           self.gi.libraries.delete_library(lib['id'])
+                        self.gi.histories.delete_history(data_history['id'], purge=True)
+                        self.gi.histories.delete_history(result_history['id'], purge=True)
                     else:
                         self.logger.error("Failed to download result file for {0}"
                             .format(result_history_name))
@@ -662,11 +672,10 @@ class galaxy(Thread):
                     if(os.path.isfile(self.task_file)):
                         shutil.move(self.task_file, self.error_dir +  
                                     os.path.basename(self.task_file))
-                    # handle error message
-                    #delete_library
+                    # delete_library
                     if lib:
                       self.gi.libraries.delete_library(lib['id'])
-                    delete_history
+                    # delete_history
                     if data_history:
                        self.gi.histories.delete_history(data_history['id'], purge=True)
                     if result_history:
