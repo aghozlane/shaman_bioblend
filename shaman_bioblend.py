@@ -292,18 +292,13 @@ class galaxy(Thread):
                     glob_progress = glob_progress + (new_progress - prev_progress)
                     prev_progress = new_progress
                 with open(progress_file, "wt") as progress:
-                    #progress.write("{0}".format(glob_progress * 0.5))
                     progress.write("{0}".format(glob_progress / 3.0))
-                
-                #print("progression {0}".format(self.gi.histories.get_status(history['id'])['percent_complete']))
-                #print(progress_story['state'])
-                print("progression {0}".format(glob_progress))
-                print("progression {0}".format(glob_progress / 3.0))
+                # print("progression {0}".format(glob_progress))
+                # print("progression {0}".format(glob_progress / 3.0))
                 
                 # Success
                 if progress_story['state'] == "ok" and (glob_progress == 100.0 or glob_progress == 300.0):
                     job_done = True
-                    #print("====================Job Done===========================")
                     self.logger.info(progress_story)
                 # fail 
                 elif progress_story['state'] == "error" or progress_story['state_details']['error'] > 0: 
@@ -344,6 +339,7 @@ class galaxy(Thread):
         except IOError:
             self.logger.error("Error cannot open {0} or {1}"
                               .format(progress_file, error_file))
+            job_done = self.check_progress(history, glob_progress, prev_progress)
         return job_done
 
     # def get_members(self, tar, prefix):
@@ -454,9 +450,7 @@ class galaxy(Thread):
             os.mkdir(result_dir)
         try:
             for result_type in list_result:
-                print(result_type)
                 for result_file in list_result[result_type]:
-                    print(result_file)
                     match = self.gi.histories.show_matching_datasets(
                                     history_id, result_file)
                     if len(match) >0:
@@ -576,7 +570,6 @@ class galaxy(Thread):
                                     params["20"] = {'paired|pattern': self.data_task["pattern_R1"]}
                                 else:
                                     params["28"] = {'paired|pattern': self.data_task["pattern_R1"]}
-                                print(params)
                                 self.gi.workflows.invoke_workflow(
                                     workflow[0]['id'], inputs=dataset_map,
                                     params=params, history_id=result_history['id'])
@@ -588,7 +581,6 @@ class galaxy(Thread):
                                     params["18"] = {'paired|pattern': self.data_task["pattern_R1"]}
                                 else:
                                     params["26"] = {'paired|pattern': self.data_task["pattern_R1"]}
-                                print(params)
                                 self.gi.workflows.invoke_workflow(
                                     workflow[0]['id'], inputs=dataset_map,
                                     params=params, history_id=result_history['id'])
