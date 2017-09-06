@@ -272,6 +272,7 @@ class galaxy(Thread):
     def check_progress(self, history, glob_progress=0.0, prev_progress=0.0):
         """Check progression
         """
+        countdown = 0
         progress_file = (self.doing_dir + os.sep + self.data_task["name"]
                          + "_progress.txt")
         error_file = (self.error_dir + os.sep + self.data_task["name"]
@@ -300,6 +301,11 @@ class galaxy(Thread):
                 if progress_story['state'] == "ok" and (glob_progress == 100.0 or glob_progress == 300.0):
                     job_done = True
                     self.logger.info(progress_story)
+                elif progress_story['state'] == "ok" and countdown >= 10:
+                    job_done = True
+                    self.logger.info(progress_story)
+                elif progress_story['state'] == "ok":
+                    countdown += 1
                 # fail 
                 elif progress_story['state'] == "error" or progress_story['state_details']['error'] > 0: 
                     self.logger.error(progress_story)
