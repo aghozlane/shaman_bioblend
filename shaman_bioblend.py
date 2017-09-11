@@ -568,7 +568,7 @@ class galaxy(Thread):
                             if self.data_task['host'] != "" and self.data_task["paired"]:
                                 params = {
                                     "3":{"reference_genome|index":self.data_task["host"]},
-                                    "7":{'splitname': self.data_task["pattern_R1"]},
+                                    "7":{'pattern|sub_pattern': self.data_task["pattern_R1"]},
                                          }
                                 if self.data_task["type"] == "16S_18S":
                                     params["24"] = {'paired|pattern': self.data_task["pattern_R1"]}
@@ -580,7 +580,7 @@ class galaxy(Thread):
                                     workflow[0]['id'], inputs=dataset_map,
                                     params=params, history_id=result_history['id'])
                             elif self.data_task['host'] == "" and self.data_task["paired"]:
-                                params={"5":{'splitname': self.data_task["pattern_R1"]}}
+                                params={"5":{'pattern|sub_pattern': self.data_task["pattern_R1"]}}
                                 if self.data_task["type"] == "16S_18S":
                                     params["21"] = {'paired|pattern' : self.data_task["pattern_R1"]}
                                 elif self.data_task["type"] == "23S_28S":
