@@ -119,7 +119,7 @@ class galaxy(Thread):
                         raise ValueError("host information is missing in {0}".format(self.task_file))
                     if "type" not in data_task:
                         raise ValueError("type information is missing in {0}".format(self.task_file))
-                    if data_task["type"] not in ["16S_18S", "23S_28S",
+                    if data_task["type"] not in ["16S", "18S", "23S_28S",
                                                  "ITS", "WGS"]:
                         raise ValueError("type information is incorrect in {0}".format(self.task_file))
                     if "mail" not in data_task:
@@ -499,9 +499,9 @@ class galaxy(Thread):
         list_result['fasta'] = ["shaman_otu"]
         list_result['tsv'] = ["shaman_rdp_annotation", "shaman_otu_table",
                         "shaman_process_build", "shaman_process_annotation"]
-        if self.data_task["type"] == "16S_18S":
+        if self.data_task["type"] == "16S":
             list_result['biom'] = ["shaman_silva", "shaman_greengenes"]
-        elif self.data_task["type"] == "23S_28S":
+        elif self.data_task["type"] == "18S" or self.data_task["type"] == "23S_28S":
             list_result['biom'] = ["shaman_silva"]
         else:
             list_result['biom'] = ["shaman_findley", "shaman_unite", "shaman_underhill"]
@@ -570,7 +570,7 @@ class galaxy(Thread):
                                     "3":{"reference_genome|index":self.data_task["host"]},
                                     "7":{'pattern|sub_pattern': self.data_task["pattern_R1"]},
                                          }
-                                if self.data_task["type"] == "16S_18S":
+                                if self.data_task["type"] == "16S" or self.data_task["type"] == "18S":
                                     params["24"] = {'paired|pattern': self.data_task["pattern_R1"]}
                                 elif self.data_task["type"] == "23S_28S":
                                     params["20"] = {'paired|pattern': self.data_task["pattern_R1"]}
@@ -581,7 +581,7 @@ class galaxy(Thread):
                                     params=params, history_id=result_history['id'])
                             elif self.data_task['host'] == "" and self.data_task["paired"]:
                                 params={"5":{'pattern|sub_pattern': self.data_task["pattern_R1"]}}
-                                if self.data_task["type"] == "16S_18S":
+                                if self.data_task["type"] == "16S" or self.data_task["type"] == "18S":
                                     params["21"] = {'paired|pattern' : self.data_task["pattern_R1"]}
                                 elif self.data_task["type"] == "23S_28S":
                                     params["18"] = {'paired|pattern': self.data_task["pattern_R1"]}
