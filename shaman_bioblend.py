@@ -35,6 +35,7 @@ import tarfile
 import zipfile
 import lockfile
 import datetime
+import socket
 
 class FullPaths(argparse.Action):
     """Expand user- and relative-paths"""
@@ -418,11 +419,12 @@ class galaxy(Thread):
                                 "attachment; filename= {0}"
                                 .format(os.path.basename(result_file)))
                     msg.attach(part)
-        server = smtplib.SMTP('smtp.pasteur.fr', 587)
-        server.starttls()
-        text = msg.as_string()
-        server.sendmail(fromaddr, toaddr, text)
-        server.quit()
+        if socket.gethostname() == "ShinyPro":
+            server = smtplib.SMTP('smtp.pasteur.fr', 587)
+            server.starttls()
+            text = msg.as_string()
+            server.sendmail(fromaddr, toaddr, text)
+            server.quit()
         #smtplib.SMTPSenderRefused:
         #except IOError:
         #    self.logger.error("Error cannot open {0}".format(result_file))
