@@ -1,3 +1,6 @@
+                    if 'outputs' in dataset:
+                        if "id" in dataset['outputs'][0]:
+                            send_is_ok = True
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #    This program is free software: you can redistribute it and/or modify
@@ -31,7 +34,7 @@ from email.mime.base import MIMEBase
 from email import encoders
 import requests
 #import keyring
-import tarfile
+#import tarfile
 import zipfile
 import lockfile
 import datetime
@@ -141,6 +144,17 @@ class galaxy(Thread):
                         os.path.basename(self.task_file))
         return data_task_ok
 
+    def dump_json(self):
+        """Dump json file with galaxy info
+        """
+        print(self.task_file)
+        try:
+            with open(self.task_file, "wt") as task:
+                json.dump(self.data_task, task)
+        except IOError:
+            self.logger.error("Failed to write {0}".format(self.task_file))
+
+
     def check_file_size(self, path):
         """Check if no file above 2Gb
         """
@@ -157,14 +171,26 @@ class galaxy(Thread):
                                    'element_identifiers': [],
                                    'name': "collection_{0}".format(str(os.getpid()))}
         for i,fastq_file in enumerate(sorted(glob.glob('{0}/*.f*q*'.format(path)))):
-            if lib:
-                lib_dataset = self.gi.libraries.upload_file_from_local_path(
-                            lib['id'], fastq_file)
-                # move the data in the history
-                dataset = self.gi.histories.upload_dataset_from_library(
-                                history['id'], lib_dataset[0]['id'])
-            else:
-                dataset = self.gi.tools.upload_file(fastq_file, history_id)
+            send_is_ok = False
+            while not send_is_ok:
+                try:
+                    if lib:
+                        lib_dataset = self.gi.libraries.upload_file_from_local_path(
+                                    lib['id'], fastq_file)
+                        # move the data in the history
+                        dataset = self.gi.histories.upload_dataset_from_library(
+                                        history['id'], lib_dataset[0]['id'])
+                    else:
+                        dataset = self.gi.tools.upload_file(fastq_file, history_id)
+                        else:
+                            print("retry")
+                            time.sleep(5)
+                    else:
+                        print("retry")
+                        time.sleep(5)
+                except:
+                    print("retry")
+                    time.sleep(5)
             # Add dataset in the collection
             collection_description['element_identifiers'].append(
                 {'id': dataset['outputs'][0]["id"],
@@ -494,6 +520,10 @@ class galaxy(Thread):
                                 str(self.num_job))
         # Load json data
         self.data_task = self.load_json()
+        # Add galaxy info
+        self.data_task['data_history_name'] = data_history_name
+        self.data_task['result_history_name'] = result_history_name
+        self.dump_json()
         # Output
         zip_file = self.done_dir + os.sep + "shaman_" + self.data_task["name"].replace("file", "") + ".zip"
         result_dir = self.done_dir + os.sep + self.data_task["name"] + os.sep
