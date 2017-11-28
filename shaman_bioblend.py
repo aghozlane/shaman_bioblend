@@ -1,6 +1,3 @@
-                    if 'outputs' in dataset:
-                        if "id" in dataset['outputs'][0]:
-                            send_is_ok = True
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #    This program is free software: you can redistribute it and/or modify
@@ -171,8 +168,9 @@ class galaxy(Thread):
                                    'element_identifiers': [],
                                    'name': "collection_{0}".format(str(os.getpid()))}
         for i,fastq_file in enumerate(sorted(glob.glob('{0}/*.f*q*'.format(path)))):
+            retry = 0
             send_is_ok = False
-            while not send_is_ok:
+            while not send_is_ok and retry <= 5 :
                 try:
                     if lib:
                         lib_dataset = self.gi.libraries.upload_file_from_local_path(
@@ -182,15 +180,21 @@ class galaxy(Thread):
                                         history['id'], lib_dataset[0]['id'])
                     else:
                         dataset = self.gi.tools.upload_file(fastq_file, history_id)
+                    if 'outputs' in dataset:
+                        if "id" in dataset['outputs'][0]:
+                            send_is_ok = True
                         else:
                             print("retry")
                             time.sleep(5)
+                            retry += 1 
                     else:
                         print("retry")
                         time.sleep(5)
+                        retry += 1 
                 except:
                     print("retry")
                     time.sleep(5)
+                    retry += 1 
             # Add dataset in the collection
             collection_description['element_identifiers'].append(
                 {'id': dataset['outputs'][0]["id"],
