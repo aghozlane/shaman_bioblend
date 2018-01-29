@@ -47,16 +47,19 @@ class FullPaths(argparse.Action):
 
 class galaxy:
 
-    def __init__(self, task_file, done_dir, galaxy_url, galaxy_key, num_job,
-                https_mode, jobid):
+    def __init__(self, task_file, done_dir, galaxy_url, galaxy_key, https_mode):
+        #jobid
+        #num_job
+
         self.galaxy_url = galaxy_url
         self.galaxy_key = galaxy_key
         self.gi = GalaxyInstance(url=galaxy_url, key=galaxy_key)
         self.gi.verify = https_mode
         self.task_file = task_file
         self.done_dir = done_dir
-        self.num_job = num_job
-        self.jobid = jobid
+        #self.num_job = num_job
+        #self.jobid = jobid
+
 
     def load_json(self):
         """Load and validate Json
@@ -67,7 +70,7 @@ class galaxy:
                 data_task = json.load(task)
                 if isinstance(data_task, (list, tuple)):
                     data_task = data_task[0]
-                data_task["name"] = os.path.splitext(os.path.basename(self.task_file))[0]
+                #data_task["name"] = os.path.splitext(os.path.basename(self.task_file))[0]
                 data_task_ok = data_task
         except IOError as err:
             err.extra_info("Error cannot open {0}".format(self.task_file)) 
@@ -123,12 +126,11 @@ class galaxy:
         """Upload, run galaxy workflow and dowload results
         """
         list_result = {}
-        result_history_name = ('shaman_' + str(self.jobid) + "_" + 
-                                str(self.num_job))
-        result_history = self.gi.histories.get_histories(name=result_history_name)[0]
+        self.data_task = self.load_json()
+        result_history = self.gi.histories.get_histories(name=self.data_task['result_history_name'])[0]
         print(result_history)
         # Load json data
-        self.data_task = self.load_json()
+        
         # Output
         zip_file = self.done_dir + os.sep + "shaman_" + self.data_task["name"].replace("file", "") + ".zip"
         result_dir = self.done_dir + os.sep + self.data_task["name"] + os.sep
@@ -193,19 +195,19 @@ def getArguments():
                         default='https://galaxy.pasteur.fr',
                         #default='https://galaxy-dev.web.pasteur.fr',
                         #default='http://127.0.0.1:8080',
-                        help='Url to galaxy.')
+                        help='Url to galaxy (default https://galaxy.pasteur.fr).')
     parser.add_argument('-k', dest='galaxy_key', type=str, #required=True,
                         default='31f05d9edaa2228b66c538f43b0d5d52',
                         #default=keyring.get_password("galaxy", "aghozlan"),
                         #default='7ac30484f696937116f960531a05c2b6',
                         #default='f293dce7785a77c338db9e8b8df9922c',
-                        help='User galaxy key.')
+                        help='User galaxy key (default 31f05d9edaa2228b66c538f43b0d5d52).')
     parser.add_argument('-i', dest='todo_file', type=isfile, required=True,
                         help='Todo job file.')
-    parser.add_argument('-j', dest='jobid', type=str, required=True,
-                        help='Galaxy job id.')
-    parser.add_argument('-n', dest='num_job', type=str, required=True,
-                        help='Num job id.')
+    #parser.add_argument('-j', dest='jobid', type=str, required=True,
+    #                    help='Galaxy job id.')
+    #parser.add_argument('-n', dest='num_job', type=str, required=True,
+    #                    help='Num job id.')
     parser.add_argument('-w', dest='done_dir', type=isdir, required=True,
                         action=FullPaths, help='Path to the result directory.')
     parser.add_argument('-s', dest='https_mode', action='store_true',
@@ -221,8 +223,7 @@ def main():
     """
     args = getArguments()
     djinn = galaxy(args.todo_file, args.done_dir, args.galaxy_url,
-                   args.galaxy_key, args.num_job, args.https_mode,
-                   args.jobid)
+                   args.galaxy_key, args.https_mode)
     djinn.run()
 
 
