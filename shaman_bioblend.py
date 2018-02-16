@@ -537,8 +537,6 @@ class galaxy(Thread):
         # Add galaxy info
         self.data_task['data_history_name'] = data_history_name
         self.data_task['result_history_name'] = result_history_name
-        self.logger.info("Starting new history {0}".format(
-                    data_history_name))
         self.logger.info("Starting dump of {0}".format(
                     self.task_file))
         self.dump_json()
