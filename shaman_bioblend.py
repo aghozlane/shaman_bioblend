@@ -71,7 +71,7 @@ class galaxy(Thread):
         self.logger.info("Starting galaxy instance for {0} : {1}".format(
                     galaxy_url, galaxy_key))
         self.gi = GalaxyInstance(url=galaxy_url, key=galaxy_key)
-        self.logger.info("{0}".format(gi))
+        self.logger.info("{0}".format(self.gi))
         self.logger.info("Connection obtained for {0} : {1}".format(
                     galaxy_url, galaxy_key))
         self.gi.verify = https_mode
