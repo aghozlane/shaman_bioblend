@@ -69,6 +69,8 @@ class galaxy(Thread):
         self.galaxy_url = galaxy_url
         self.galaxy_key = galaxy_key
         self.gi = GalaxyInstance(url=galaxy_url, key=galaxy_key)
+        self.logger.info("Started galaxy instance for {0} : {1}".format(
+                    galaxy_url, galaxy_key))
         self.gi.verify = https_mode
         self.task_file = task_file
         self.doing_dir = doing_dir
