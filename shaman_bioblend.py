@@ -68,8 +68,11 @@ class galaxy(Thread):
         self.logger = logger
         self.galaxy_url = galaxy_url
         self.galaxy_key = galaxy_key
+        self.logger.info("Starting galaxy instance for {0} : {1}".format(
+                    galaxy_url, galaxy_key))
         self.gi = GalaxyInstance(url=galaxy_url, key=galaxy_key)
-        self.logger.info("Started galaxy instance for {0} : {1}".format(
+        self.logger.info("{0}".format(gi))
+        self.logger.info("Connection obtained for {0} : {1}".format(
                     galaxy_url, galaxy_key))
         self.gi.verify = https_mode
         self.task_file = task_file
@@ -525,11 +528,22 @@ class galaxy(Thread):
         result_history_name = ('shaman_' + str(os.getpid())+ "_" + 
                                 str(self.num_job))
         # Load json data
+        self.logger.info("Start reading {0}".format(
+                    self.task_file))
         self.data_task = self.load_json()
+        self.logger.info("Done reading {0}".format(
+                    self.task_file))
+
         # Add galaxy info
         self.data_task['data_history_name'] = data_history_name
         self.data_task['result_history_name'] = result_history_name
+        self.logger.info("Starting new history {0}".format(
+                    data_history_name))
+        self.logger.info("Starting dump of {0}".format(
+                    self.task_file))
         self.dump_json()
+        self.logger.info("Done dumping of {0}".format(
+                    self.task_file))
         # Output
         zip_file = self.done_dir + os.sep + "shaman_" + self.data_task["name"].replace("file", "") + ".zip"
         result_dir = self.done_dir + os.sep + self.data_task["name"] + os.sep
@@ -554,6 +568,8 @@ class galaxy(Thread):
             # Send data
             try:
                 # Create an history
+                self.logger.info("Starting new history {0}".format(
+                    data_history_name))
                 data_history = self.gi.histories.create_history(
                     name=data_history_name)
                 self.logger.info("Load data for {0} : {1}".format(
