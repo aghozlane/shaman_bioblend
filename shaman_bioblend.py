@@ -149,12 +149,14 @@ class galaxy(Thread):
     def dump_json(self):
         """Dump json file with galaxy info
         """
-        print(self.task_file)
+        todo_file = self.doing_dir + os.path.basename(task)
+        os.remove(self.task_file)  
         try:
-            with open(self.task_file, "wt") as task:
+            with open(todo_file, "wt") as task:
                 json.dump(self.data_task, task)
         except IOError:
             self.logger.error("Failed to write {0}".format(self.task_file))
+        self.task_file = todo_file
 
 
     def check_file_size(self, path):
@@ -831,9 +833,9 @@ def pandaemonium(path_log, galaxy_url, galaxy_key, work_dir, https_mode,
         if len(todo_list) > 0:
             logger.info("I have a new job todo")
             for task in todo_list: 
-                todo_file = doing_dir + os.path.basename(task)
-                shutil.move(task, todo_file)  
-                djinn = galaxy(logger, todo_file, doing_dir, done_dir,
+                #todo_file = doing_dir + os.path.basename(task)
+                #shutil.move(task, todo_file)  
+                djinn = galaxy(logger, task, doing_dir, done_dir,
                                error_dir, galaxy_url, galaxy_key, num_job,
                                https_mode, delete_mode)
                 djinn.start()
