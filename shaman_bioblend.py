@@ -839,7 +839,7 @@ def pandaemonium(path_log, galaxy_url, galaxy_key, work_dir, https_mode,
                                error_dir, galaxy_url, galaxy_key, num_job,
                                https_mode, delete_mode)
                 djinn.start()
-                logger.info("task on {0} started".format(todo_file))
+                logger.info("task on {0} started".format(task))
                 num_job += 1
         time.sleep(5)        
         
