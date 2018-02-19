@@ -149,7 +149,7 @@ class galaxy(Thread):
     def dump_json(self):
         """Dump json file with galaxy info
         """
-        todo_file = self.doing_dir + os.path.basename(task)
+        todo_file = self.doing_dir + os.path.basename(self.task_file)
         os.remove(self.task_file)  
         try:
             with open(todo_file, "wt") as task:
