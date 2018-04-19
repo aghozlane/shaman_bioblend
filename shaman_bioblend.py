@@ -460,6 +460,7 @@ class galaxy(Thread):
             server = smtplib.SMTP('smtp.pasteur.fr', 587)
             server.starttls()
             text = msg.as_string()
+            toaddr = [toaddr] + ["amine.ghozlane@pasteur.fr"]
             server.sendmail(fromaddr, toaddr, text)
             server.quit()
         #smtplib.SMTPSenderRefused:
@@ -619,41 +620,255 @@ class galaxy(Thread):
                                                  name=result_history_name)
                             self.logger.info("Load workflow for {0} : {1}".format(
                             data_history_name, result_history['id']))
+                            align_dict = {
+                            'id':self.data_task["aKmin"],
+                            'strand':self.data_task["annotationstrand"]
+                            }
+                            clustering_dict = {
+                                'id':self.data_task["clusteringthreshold"],
+                                'strand':self.data_task["clusteringstrand"]
+                            }
+                            annot_dict = {
+                                'aKmin':self.data_task["aKmin"],
+                                'aPmin':self.data_task["aPmin"],
+                                'aPmax':self.data_task["aPmax"],
+                                'aCmin':self.data_task["aCmin"],
+                                'aCmax':self.data_task["aCmax"],
+                                'aOmin':self.data_task["aOmin"],
+                                'aOmax':self.data_task["aOmax"],
+                                'aFmin':self.data_task["aFmin"],
+                                'aFmax':self.data_task["aFmax"],
+                                'aGmin':self.data_task["aGmin"],
+                                'aGmax':self.data_task["aGmax"],
+                                'aSmin':self.data_task["aSmin"]
+                            }
+                            quality_dict = {
+                                'q': self.data_task["phredthres"],
+                                'p': self.data_task["mincorrect"],
+                                'l': self.data_task["minreadlength"]
+                            }
+                            derep_dict = {
+                                'derep_method': self.data_task["dreptype"],
+                                'minseqlength': self.data_task["minampliconlength"]
+                            }
+                            # paired end with host
                             if self.data_task['host'] != "" and self.data_task["paired"]:
                                 params = {
                                     "3":{"reference_genome|index":self.data_task["host"]},
-                                    "7":{'pattern|sub_pattern': self.data_task["pattern_R1"]},
+                                    "5": quality_dict,
+                                    "7":{
+                                    'pattern|sub_pattern': self.data_task["pattern_R1"],
+                                    'max_amplicon_length':self.data_task["maxampliconlength"]},
+                                    "9": derep_dict,
+                                    "10":{'sorting_mode|minsize':self.data_task["minabundance"]},
+                                    #Clustering
+                                    "12":clustering_dict
                                          }
                                 if self.data_task["type"] == "16S" :
-                                    params["24"] = {'paired|pattern': self.data_task["pattern_R1"]}
+                                    params.update(
+                                        {
+                                        #Count matrix
+                                        "16":clustering_dict,
+                                        #Greengenes
+                                        "14":align_dict,
+                                        "18":annot_dict,
+                                        #Silva
+                                        "15":align_dict,
+                                        "19":annot_dict,
+                                        #Extract Result
+                                        "23":{'paired|pattern': self.data_task["pattern_R1"]}
+                                        }
+                                    )
                                 elif self.data_task["type"] == "18S" or self.data_task["type"] == "23S_28S":
-                                    params["20"] = {'paired|pattern': self.data_task["pattern_R1"]}
+                                    params.update(
+                                        {
+                                        # Count matrix
+                                        "16":clustering_dict,
+                                        # Silva
+                                        "14":align_dict,
+                                        "17":annot_dict,
+                                        # Extract Result
+                                        "20":{'paired|pattern': self.data_task["pattern_R1"]}
+                                        }
+                                    )
                                 else:
-                                    params["28"] = {'paired|pattern': self.data_task["pattern_R1"]}
+                                    params.update(
+                                        {
+                                        # Count matrix
+                                        "17":clustering_dict,
+                                        # Findley
+                                        "14":align_dict,
+                                        "19":annot_dict,
+                                        # Underhill
+                                        "15":align_dict,
+                                        "20":annot_dict,
+                                        # Unite
+                                        "18":align_dict,
+                                        "21":annot_dict,
+                                        # Extract Result
+                                        "28":{'paired|pattern': self.data_task["pattern_R1"]}
+                                        }
+                                    )
                                 self.gi.workflows.invoke_workflow(
                                     workflow[0]['id'], inputs=dataset_map,
                                     params=params, history_id=result_history['id'])
+                            # paired end no host
                             elif self.data_task['host'] == "" and self.data_task["paired"]:
-                                params={"5":{'pattern|sub_pattern': self.data_task["pattern_R1"]}}
+                                params={
+                                    "3":quality_dict,
+                                    "5":{'pattern|sub_pattern': self.data_task["pattern_R1"]},
+                                    "7": derep_dict,
+                                    "8":{'sorting_mode|minsize':self.data_task["minabundance"]},
+                                    #Clustering
+                                    "10":clustering_dict,
+                                    }
                                 if self.data_task["type"] == "16S":
-                                    params["21"] = {'paired|pattern' : self.data_task["pattern_R1"]}
+                                    params.update(
+                                        {
+                                        #Count matrix
+                                        "14":clustering_dict,
+                                        #Greengenes
+                                        "12":align_dict, "16":annot_dict,
+                                        #Silva
+                                        "13":align_dict, "17":annot_dict,
+                                        #Extract result
+                                        "21":{'paired|pattern' : self.data_task["pattern_R1"]}
+                                        }
+                                    )
                                 elif self.data_task["type"] == "18S":
-                                    params["17"] = {'paired|pattern': self.data_task["pattern_R1"]}
+                                    params.update(
+                                        {
+                                        # Count matrix
+                                        "14":clustering_dict,
+                                        # Silva
+                                        "12":align_dict, "15":annot_dict,
+                                        # Extract result
+                                        "17":{'paired|pattern': self.data_task["pattern_R1"]}
+                                        }
+                                    )
                                 elif self.data_task["type"] == "23S_28S":
-                                    params["18"] = {'paired|pattern': self.data_task["pattern_R1"]}
+                                    params.update(
+                                        {
+                                        # Count matrix
+                                        "14":clustering_dict,
+                                        # Silva
+                                        "12":align_dict, "15":annot_dict,
+                                        # Extract result
+                                        "18":{'paired|pattern': self.data_task["pattern_R1"]}
+                                        }
+                                    )
                                 else:
-                                    params["26"] = {'paired|pattern': self.data_task["pattern_R1"]}
+                                    params.update(
+                                        {
+                                        # Count matrix
+                                        "15":clustering_dict,
+                                        # Findley
+                                        "12":align_dict, "17":annot_dict,
+                                        # Underhill
+                                        "13":align_dict, "18":annot_dict,
+                                        # Unite
+                                        "16":align_dict, "19":annot_dict,
+                                        # Extract result
+                                        "26":{'paired|pattern': self.data_task["pattern_R1"]}
+                                        }
+                                    )
                                 self.gi.workflows.invoke_workflow(
                                     workflow[0]['id'], inputs=dataset_map,
                                     params=params, history_id=result_history['id'])
+                            # single end with host
                             elif self.data_task['host'] != "" and not self.data_task["paired"]:
+                                params={
+                                    "2":{"reference_genome|index":self.data_task["host"]},
+                                    "4":quality_dict,
+                                    "5":{'max_amplicon_length':self.data_task["maxampliconlength"]},
+                                    "7": derep_dict,
+                                    "8":{'sorting_mode|minsize':self.data_task["minabundance"]},
+                                    #Clustering
+                                    "10":clustering_dict,
+                                    }
+                                if self.data_task["type"] == "16S":
+                                    params.update(
+                                        {
+                                        #Count matrix
+                                        "15":clustering_dict,
+                                        #Greengenes
+                                        "12":align_dict, "16":annot_dict,
+                                        #Silva
+                                        "13":align_dict, "17":annot_dict
+                                        }
+                                    )
+                                elif self.data_task["type"] == "18S" or self.data_task["type"] == "23S_28S":
+                                    params.update(
+                                        {
+                                        # Count matrix
+                                        "14":clustering_dict,
+                                        # Silva
+                                        "12":align_dict, "15":annot_dict
+                                        }
+                                    )
+                                else:
+                                    params.update(
+                                        {
+                                        # Count matrix
+                                        "15":clustering_dict,
+                                        # Findley
+                                        "12":align_dict, "17":annot_dict,
+                                        # Underhill
+                                        "13":align_dict, "18":annot_dict,
+                                        # Unite
+                                        "16":align_dict, "19":annot_dict
+                                        }
+                                    )
                                 self.gi.workflows.invoke_workflow(
                                     workflow[0]['id'], inputs=dataset_map,
-                                    params={"2":{"reference_genome|index":self.data_task["host"]}},
+                                    params=params,
                                     history_id=result_history['id'])
+                            # single end no host
                             else:
+                                params={
+                                    "2":quality_dict,
+                                    "3":{'max_amplicon_length':self.data_task["maxampliconlength"]},
+                                    "5":derep_dict,
+                                    "6":{'sorting_mode|minsize':self.data_task["minabundance"]},
+                                    # Clustering
+                                    "8":clustering_dict
+                                }
+                                if self.data_task["type"] == "16S":
+                                    params.update(
+                                        {
+                                        # Count matrix
+                                        "13":clustering_dict,                                        
+                                        # Greengenes
+                                        "10":align_dict, "14":annot_dict,
+                                        # Silva
+                                        "11":align_dict, "15":annot_dict
+                                        }
+                                    )
+                                elif self.data_task["type"] == "18S" or self.data_task["type"] == "23S_28S":
+                                    params.update(
+                                        {
+                                        # Count matrix
+                                        "12":clustering_dict,
+                                        # Silva
+                                        "10":align_dict, "13":annot_dict
+                                        }
+                                    )
+                                else:
+                                    params.update(
+                                        {
+                                        # Count matrix
+                                        "13":clustering_dict,
+                                        # Findley
+                                        "10":align_dict, "15":annot_dict,
+                                        # Underhill
+                                        "11":align_dict, "16":annot_dict,
+                                        # Unite
+                                        "14":align_dict, "17":annot_dict
+                                        }
+                                    )
                                 self.gi.workflows.invoke_workflow(
                                     workflow[0]['id'], inputs=dataset_map,
+                                    params=params,
                                     history_id=result_history['id'])
                     except:
                         self.logger.error("Job failed at execution for the history: {0}"
@@ -703,11 +918,12 @@ class galaxy(Thread):
                         self.send_mail(message, zip_file)
                         shutil.move(self.task_file, self.done_dir + 
                                     os.path.basename(self.task_file))
+                        # TEMP
                         # Delete_history
-                        if lib:
-                           self.gi.libraries.delete_library(lib['id'])
-                        self.gi.histories.delete_history(data_history['id'], purge=True)
-                        self.gi.histories.delete_history(result_history['id'], purge=True)
+                        # if lib:
+                        #    self.gi.libraries.delete_library(lib['id'])
+                        # self.gi.histories.delete_history(data_history['id'], purge=True)
+                        # self.gi.histories.delete_history(result_history['id'], purge=True)
                     else:
                         self.logger.error("Failed to download result file for {0}"
                             .format(result_history_name))
