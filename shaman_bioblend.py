@@ -918,12 +918,11 @@ class galaxy(Thread):
                         self.send_mail(message, zip_file)
                         shutil.move(self.task_file, self.done_dir + 
                                     os.path.basename(self.task_file))
-                        # TEMP
                         # Delete_history
-                        # if lib:
-                        #    self.gi.libraries.delete_library(lib['id'])
-                        # self.gi.histories.delete_history(data_history['id'], purge=True)
-                        # self.gi.histories.delete_history(result_history['id'], purge=True)
+                        if lib:
+                           self.gi.libraries.delete_library(lib['id'])
+                        self.gi.histories.delete_history(data_history['id'], purge=True)
+                        self.gi.histories.delete_history(result_history['id'], purge=True)
                     else:
                         self.logger.error("Failed to download result file for {0}"
                             .format(result_history_name))
