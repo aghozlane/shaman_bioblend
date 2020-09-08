@@ -191,7 +191,7 @@ class galaxy:
         if download_success:
             # Prepare zip
             self.zip_archive(list_downloaded_files, zip_file)
-            self.send_mail(message, zip_file)
+            self.send_mail(zip_file)
 
 
 def isdir(path):
