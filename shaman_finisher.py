@@ -94,7 +94,7 @@ class galaxy:
         #except IOError:
         #    self.logger.error("Error cannot open {0}".format(zip_file))
 
-    def send_mail(self, message, result_file=None):
+    def send_mail(self, result_file=None):
             """Send result by email
             """
             #try:
@@ -105,7 +105,7 @@ class galaxy:
             msg['From'] = fromaddr
             msg['To'] = toaddr
             msg['Subject'] = "Shaman result"
-            msg.attach(MIMEText(message, 'plain'))
+            msg.attach(MIMEText(self.message, 'plain'))
             if result_file:
                 if os.path.getsize(result_file) < 10000000:
                     part = MIMEBase('application', 'octet-stream')
