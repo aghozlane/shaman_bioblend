@@ -186,7 +186,7 @@ def send_mail(self, message, result_file=None):
                                 .format(os.path.basename(result_file)))
                     msg.attach(part)
         if socket.gethostname() == "ShinyPro":
-            server = smtplib.SMTP('smtp.pasteur.fr', 587)
+            server = smtplib.SMTP('smtp.pasteur.fr', 25)
             server.starttls()
             text = msg.as_string()
             toaddr = [toaddr] + ["amine.ghozlane@pasteur.fr"]
