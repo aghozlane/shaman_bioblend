@@ -94,6 +94,36 @@ class galaxy:
         #except IOError:
         #    self.logger.error("Error cannot open {0}".format(zip_file))
 
+def send_mail(self, message, result_file=None):
+        """Send result by email
+        """
+        #try:
+        fromaddr = "shaman@pasteur.fr"
+        #bcc = ['amine.ghozlane@pasteur.fr']
+        toaddr = self.data_task["mail"]
+        msg = MIMEMultipart()
+        msg['From'] = fromaddr
+        msg['To'] = toaddr
+        msg['Subject'] = "Shaman result"
+        msg.attach(MIMEText(message, 'plain'))
+        if result_file:
+            if os.path.getsize(result_file) < 10000000:
+                part = MIMEBase('application', 'octet-stream')
+                with open(result_file, "rb") as attachment:
+                    part.set_payload((attachment).read())
+                    encoders.encode_base64(part)
+                    part.add_header('Content-Disposition',
+                                "attachment; filename= {0}"
+                                .format(os.path.basename(result_file)))
+                    msg.attach(part)
+        if socket.gethostname() == "ShinyPro":
+            server = smtplib.SMTP('smtp.pasteur.fr', 25)
+            server.starttls()
+            text = msg.as_string()
+            toaddr = [toaddr] + ["amine.ghozlane@pasteur.fr"]
+            server.sendmail(fromaddr, toaddr, text)
+            server.quit()
+
     def download_result(self, history_id, list_result, result_dir):
         """Download tar archive from galaxy
         """
@@ -163,36 +193,6 @@ class galaxy:
             self.zip_archive(list_downloaded_files, zip_file)
             self.send_mail(message, zip_file)
 
-def send_mail(self, message, result_file=None):
-        """Send result by email
-        """
-        #try:
-        fromaddr = "shaman@pasteur.fr"
-        #bcc = ['amine.ghozlane@pasteur.fr']
-        toaddr = self.data_task["mail"]
-        msg = MIMEMultipart()
-        msg['From'] = fromaddr
-        msg['To'] = toaddr
-        msg['Subject'] = "Shaman result"
-        msg.attach(MIMEText(message, 'plain'))
-        if result_file:
-            if os.path.getsize(result_file) < 10000000:
-                part = MIMEBase('application', 'octet-stream')
-                with open(result_file, "rb") as attachment:
-                    part.set_payload((attachment).read())
-                    encoders.encode_base64(part)
-                    part.add_header('Content-Disposition',
-                                "attachment; filename= {0}"
-                                .format(os.path.basename(result_file)))
-                    msg.attach(part)
-        if socket.gethostname() == "ShinyPro":
-            server = smtplib.SMTP('smtp.pasteur.fr', 25)
-            server.starttls()
-            text = msg.as_string()
-            toaddr = [toaddr] + ["amine.ghozlane@pasteur.fr"]
-            server.sendmail(fromaddr, toaddr, text)
-            server.quit()
-   
 
 def isdir(path):
     """Check if path is an existing file.
