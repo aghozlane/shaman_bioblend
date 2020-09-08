@@ -510,8 +510,14 @@ class galaxy(Thread):
                             #success = False
                         else:
                             list_downloaded_files.append(res)
+                    else:
+                        self.logger.error("Match for result file: {} and result type: {} = {}".format(result_file, result_type, match))
+            assert(len(list_downloaded_files) > 0)
         except bioblend.galaxy.datasets.DatasetTimeoutException:
             self.logger.error("Failed to download {0}".format(res))
+            success = False
+        except AssertionError:
+            self.logger.error("Failed to download {0}, no file matched".format(res))
             success = False
         return success, list_downloaded_files
 

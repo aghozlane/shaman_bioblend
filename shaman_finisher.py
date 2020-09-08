@@ -47,7 +47,7 @@ class FullPaths(argparse.Action):
 
 class galaxy:
 
-    def __init__(self, task_file, done_dir, galaxy_url, galaxy_key, https_mode):
+    def __init__(self, task_file, done_dir, galaxy_url, galaxy_key, https_mode, message):
         #jobid
         #num_job
 
@@ -57,6 +57,7 @@ class galaxy:
         self.gi.verify = https_mode
         self.task_file = task_file
         self.done_dir = done_dir
+        self.message = message
         #self.num_job = num_job
         #self.jobid = jobid
 
@@ -118,7 +119,12 @@ class galaxy:
                             #success = False
                         else:
                             list_downloaded_files.append(res)
+                    else:
+                        self.logger.error("Match for result file: {} and result type: {} = {}".format(result_file, result_type, match))
+            assert(len(list_downloaded_files) > 0)
         except bioblend.galaxy.datasets.DatasetTimeoutException:
+            success = False
+        except AssertionError:
             success = False
         return success, list_downloaded_files
 
@@ -155,6 +161,37 @@ class galaxy:
         if download_success:
             # Prepare zip
             self.zip_archive(list_downloaded_files, zip_file)
+            self.send_mail(message)
+
+def send_mail(self, message, result_file=None):
+        """Send result by email
+        """
+        #try:
+        fromaddr = "shaman@pasteur.fr"
+        #bcc = ['amine.ghozlane@pasteur.fr']
+        toaddr = self.data_task["mail"]
+        msg = MIMEMultipart()
+        msg['From'] = fromaddr
+        msg['To'] = toaddr
+        msg['Subject'] = "Shaman result"
+        msg.attach(MIMEText(message, 'plain'))
+        if result_file:
+            if os.path.getsize(result_file) < 10000000:
+                part = MIMEBase('application', 'octet-stream')
+                with open(result_file, "rb") as attachment:
+                    part.set_payload((attachment).read())
+                    encoders.encode_base64(part)
+                    part.add_header('Content-Disposition',
+                                "attachment; filename= {0}"
+                                .format(os.path.basename(result_file)))
+                    msg.attach(part)
+        if socket.gethostname() == "ShinyPro":
+            server = smtplib.SMTP('smtp.pasteur.fr', 587)
+            server.starttls()
+            text = msg.as_string()
+            toaddr = [toaddr] + ["amine.ghozlane@pasteur.fr"]
+            server.sendmail(fromaddr, toaddr, text)
+            server.quit()
    
 
 def isdir(path):
@@ -206,8 +243,8 @@ def getArguments():
                         help='Todo job file.')
     #parser.add_argument('-j', dest='jobid', type=str, required=True,
     #                    help='Galaxy job id.')
-    #parser.add_argument('-n', dest='num_job', type=str, required=True,
-    #                    help='Num job id.')
+    parser.add_argument('-m', dest='message', type=str, required=True,
+                        help='Error message to send to user.')
     parser.add_argument('-w', dest='done_dir', type=isdir, required=True,
                         action=FullPaths, help='Path to the result directory.')
     parser.add_argument('-s', dest='https_mode', action='store_true',
@@ -223,7 +260,7 @@ def main():
     """
     args = getArguments()
     djinn = galaxy(args.todo_file, args.done_dir, args.galaxy_url,
-                   args.galaxy_key, args.https_mode)
+                   args.galaxy_key, args.https_mode, args.message)
     djinn.run()
 
 
