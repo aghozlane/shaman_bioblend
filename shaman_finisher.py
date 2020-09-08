@@ -161,7 +161,7 @@ class galaxy:
         if download_success:
             # Prepare zip
             self.zip_archive(list_downloaded_files, zip_file)
-            self.send_mail(message)
+            self.send_mail(message, zip_file)
 
 def send_mail(self, message, result_file=None):
         """Send result by email
