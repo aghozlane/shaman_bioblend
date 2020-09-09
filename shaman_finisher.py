@@ -53,7 +53,7 @@ class FullPaths(argparse.Action):
 
 class galaxy:
 
-    def __init__(self, task_file, done_dir, galaxy_url, galaxy_key, https_mode, message):
+    def __init__(self, task_file, done_dir, galaxy_url, galaxy_key, https_mode, message, clear_history):
         #jobid
         #num_job
 
@@ -64,6 +64,7 @@ class galaxy:
         self.task_file = task_file
         self.done_dir = done_dir
         self.message = message
+        self.clear_history = self.clear_history
         #self.num_job = num_job
         #self.jobid = jobid
 
@@ -198,6 +199,12 @@ class galaxy:
             # Prepare zip
             self.zip_archive(list_downloaded_files, zip_file)
             self.send_mail(zip_file)
+            shutil.move(self.task_file, self.done_dir + 
+                                    os.path.basename(self.task_file))
+            # Delete_history
+            if self.clear_history:
+                self.gi.histories.delete_history(data_history['id'], purge=True)
+                self.gi.histories.delete_history(result_history['id'], purge=True)
 
 
 def isdir(path):
@@ -255,6 +262,8 @@ def getArguments():
                         action=FullPaths, help='Path to the result directory.')
     parser.add_argument('-s', dest='https_mode', action='store_true',
                         default=False, help='Activate https verification.')
+    parser.add_argument('-c', dest='clear_history', action='store_true',
+                        default=False, help='Remove data and result in galaxy history.')
     args = parser.parse_args()
     return args
  
@@ -266,7 +275,8 @@ def main():
     """
     args = getArguments()
     djinn = galaxy(args.todo_file, args.done_dir, args.galaxy_url,
-                   args.galaxy_key, args.https_mode, args.message)
+                   args.galaxy_key, args.https_mode, args.message,
+                   args.clear_history)
     djinn.run()
 
 
