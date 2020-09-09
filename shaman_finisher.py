@@ -170,6 +170,8 @@ class galaxy:
         """
         list_result = {}
         self.data_task = self.load_json()
+        data_history = self.gi.histories.get_histories(name=self.data_task['"data_history_name"'])[0]
+        print(data_history)
         result_history = self.gi.histories.get_histories(name=self.data_task['result_history_name'])[0]
         print(result_history)
         # Load json data
