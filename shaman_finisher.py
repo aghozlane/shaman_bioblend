@@ -21,6 +21,11 @@ import glob
 import shutil
 #import keyring
 import zipfile
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.mime.base import MIMEBase
+from email import encoders
 
 class FullPaths(argparse.Action):
     """Expand user- and relative-paths"""
