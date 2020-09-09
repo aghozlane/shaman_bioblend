@@ -458,7 +458,7 @@ class galaxy(Thread):
                     msg.attach(part)
         if socket.gethostname() == "ShinyPro":
             server = smtplib.SMTP('smtp.pasteur.fr', 25)
-            server.starttls()
+            #server.starttls()
             text = msg.as_string()
             toaddr = [toaddr] + ["amine.ghozlane@pasteur.fr"]
             server.sendmail(fromaddr, toaddr, text)
