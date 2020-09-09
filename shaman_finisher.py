@@ -64,7 +64,7 @@ class galaxy:
         self.task_file = task_file
         self.done_dir = done_dir
         self.message = message
-        self.clear_history = self.clear_history
+        self.clear_history = clear_history
         #self.num_job = num_job
         #self.jobid = jobid
 
