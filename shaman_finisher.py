@@ -152,12 +152,13 @@ class galaxy:
                             use_default_filename=False, 
                             wait_for_completion=True, maxwait=60)
                         if os.stat(res).st_size == 0:
-                            self.logger.error("File {0} is empty".format(res))
+                            print("File {0} is empty".format(res), file=sys.stderr)
                             #success = False
                         else:
                             list_downloaded_files.append(res)
                     else:
-                        self.logger.error("Match for result file: {} and result type: {} = {}".format(result_file, result_type, match))
+                        print("Match for result file: {} and result type: {} = {}".format(result_file, result_type, match), 
+                              file=sys.stderr)
             assert(len(list_downloaded_files) > 0)
         except bioblend.galaxy.datasets.DatasetTimeoutException:
             success = False
