@@ -202,7 +202,8 @@ class galaxy:
         if download_success:
             # Prepare zip
             self.zip_archive(list_downloaded_files, zip_file)
-            self.send_mail(zip_file)
+            if len(self.message) > 0:
+                self.send_mail(zip_file)
             shutil.move(self.task_file, self.done_dir + 
                                     os.path.basename(self.task_file))
             # Delete_history
@@ -260,7 +261,7 @@ def getArguments():
                         help='Todo job file.')
     #parser.add_argument('-j', dest='jobid', type=str, required=True,
     #                    help='Galaxy job id.')
-    parser.add_argument('-m', dest='message', type=str,
+    parser.add_argument('-m', dest='message', type=str, default="",
                         help='Error message to send to user.')
     parser.add_argument('-w', dest='done_dir', type=isdir, required=True,
                         action=FullPaths, help='Path to the result directory.')
