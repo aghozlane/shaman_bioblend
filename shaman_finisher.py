@@ -258,7 +258,7 @@ def getArguments():
                         help='Todo job file.')
     #parser.add_argument('-j', dest='jobid', type=str, required=True,
     #                    help='Galaxy job id.')
-    parser.add_argument('-m', dest='message', type=str, required=True,
+    parser.add_argument('-m', dest='message', type=str,
                         help='Error message to send to user.')
     parser.add_argument('-w', dest='done_dir', type=isdir, required=True,
                         action=FullPaths, help='Path to the result directory.')
