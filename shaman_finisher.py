@@ -152,13 +152,13 @@ class galaxy:
                                 match[0]['id'], file_path = res, 
                                 use_default_filename=False, 
                                 wait_for_completion=True, maxwait=60)
-                        except bioblend.galaxy.datasets.DatasetTimeoutException:
-                            print("{} is missing".format(result_file))
-                        if os.stat(res).st_size == 0:
-                            print("File {0} is empty".format(res), file=sys.stderr)
+                            if os.stat(res).st_size == 0:
+                                print("File {0} is empty".format(res), file=sys.stderr)
                             #success = False
-                        else:
-                            list_downloaded_files.append(res)
+                            else:
+                                list_downloaded_files.append(res)
+                        except bioblend.galaxy.datasets.DatasetTimeoutException:
+                            print("{} is missing, ".format(result_file))
                     else:
                         print("Match for result file: {} and result type: {} = {}".format(result_file, result_type, match), 
                               file=sys.stderr)
