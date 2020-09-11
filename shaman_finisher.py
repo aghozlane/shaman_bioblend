@@ -147,10 +147,13 @@ class galaxy:
                                     history_id, result_file)
                     if len(match) >0:
                         res = result_dir + result_file + "." + result_type
-                        self.gi.datasets.download_dataset(
-                            match[0]['id'], file_path = res, 
-                            use_default_filename=False, 
-                            wait_for_completion=True, maxwait=60)
+                        try:
+                            self.gi.datasets.download_dataset(
+                                match[0]['id'], file_path = res, 
+                                use_default_filename=False, 
+                                wait_for_completion=True, maxwait=60)
+                        except bioblend.galaxy.datasets.DatasetTimeoutException:
+                            print("{} is missing".format(result_file))
                         if os.stat(res).st_size == 0:
                             print("File {0} is empty".format(res), file=sys.stderr)
                             #success = False
@@ -160,8 +163,6 @@ class galaxy:
                         print("Match for result file: {} and result type: {} = {}".format(result_file, result_type, match), 
                               file=sys.stderr)
             assert(len(list_downloaded_files) > 0)
-        except bioblend.galaxy.datasets.DatasetTimeoutException:
-            success = False
         except AssertionError:
             success = False
         return success, list_downloaded_files
