@@ -13,6 +13,7 @@
 from bioblend.galaxy import GalaxyInstance
 import bioblend
 from threading import Thread
+# python-daemon package
 import daemon
 import logging
 from logging.handlers import RotatingFileHandler
@@ -139,9 +140,10 @@ class galaxy(Thread):
                 err.extra_info("Json {0} is empty".format(self.task_file))
             #except TypeError as err:
             #    err.extra_info("Check information format in {0}".format(self.task_file))
-        except:
+        except Exception as e: 
             self.logger.error("Failed to read {0}".format(self.task_file))
             self.logger.error(sys.exc_info()[1])
+            self.logger.error("{0}".format(e))
             shutil.move(self.task_file, self.error_dir +  
                         os.path.basename(self.task_file))
         return data_task_ok
@@ -544,6 +546,7 @@ class galaxy(Thread):
                     self.task_file))
 
         # Add galaxy info
+        print(self.data_task)
         self.data_task['data_history_name'] = data_history_name
         self.data_task['result_history_name'] = result_history_name
         self.logger.info("Starting dump of {0}".format(
@@ -980,6 +983,7 @@ def getArguments():
     parser.add_argument('-u', dest='galaxy_url', type=str, #required=True,
                         default='https://galaxy.pasteur.fr',
                         #default='https://galaxy-dev.web.pasteur.fr',
+                        #default='https://maestro-galaxy-dev.maestro.pasteur.fr',
                         #default='http://127.0.0.1:8080',
                         help='Url to galaxy.')
     parser.add_argument('-k', dest='galaxy_key', type=str, #required=True,
