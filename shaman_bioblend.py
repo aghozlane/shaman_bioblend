@@ -503,10 +503,11 @@ class galaxy(Thread):
                                     history_id, result_file)
                     if len(match) >0:
                         res = result_dir + result_file + "." + result_type
+                        #wait_for_completion=True,
                         self.gi.datasets.download_dataset(
                             match[0]['id'], file_path = res, 
                             use_default_filename=False, 
-                            wait_for_completion=True, maxwait=60)
+                            maxwait=60)
                         if os.stat(res).st_size == 0:
                             self.logger.error("File {0} is empty".format(res))
                             #success = False
