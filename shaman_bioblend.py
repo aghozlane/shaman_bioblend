@@ -240,6 +240,7 @@ class galaxy(Thread):
             workflow = self.gi.workflows.get_workflows(
                 name="masque_paired_end_" + self.data_task["type"]
                 + "_short")
+
         #detailworkflow = self.gi.workflows.show_workflow(
         #    workflow[0]['id'])
         # Get fastq input
@@ -715,8 +716,8 @@ class galaxy(Thread):
                                         # Unite
                                         "18":align_dict,
                                         "21":annot_dict,
-                                        # Extract Result
-                                        "28":{'paired|pattern': self.data_task["pattern_R1"]}
+                                        # new 26 instead of 28 Extract Result
+                                        "26":{'paired|pattern': self.data_task["pattern_R1"]}
                                         }
                                     )
                                 self.gi.workflows.invoke_workflow(
@@ -779,7 +780,8 @@ class galaxy(Thread):
                                         # Unite
                                         "16":align_dict, "19":annot_dict,
                                         # Extract result
-                                        "26":{'paired|pattern': self.data_task["pattern_R1"]}
+                                        #new 24 instead of 26
+                                        "24":{'paired|pattern': self.data_task["pattern_R1"]}
                                         }
                                     )
                                 self.gi.workflows.invoke_workflow(
