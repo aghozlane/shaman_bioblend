@@ -11,5 +11,5 @@
   "aCmin": 0.785, "dreptype": "--derep_prefix", "aOmin": 0.82, "phredthres": 20, "aSmin": 0.98, "aKmin": 0.75, "minreadlength": 50, 
   "clusteringstrand": "both", "aPmax": 0.785, "clusteringthreshold": 0.97, "data_history_name": "data_shaman_test", 
   "annotationstrand": "both", "aOmax": 0.865, "aPmin": 0.75,  "maxampliconlength": 0, "mincorrect": 80, 
-  "name": "ITS_paired", "minampliconlength": 50, "aGmax": 0.98
+  "name": "ITS_paired_host", "minampliconlength": 50, "aGmax": 0.98
 }

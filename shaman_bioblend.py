@@ -515,7 +515,8 @@ class galaxy(Thread):
                         else:
                             list_downloaded_files.append(res)
                     else:
-                        self.logger.error("Match for result file: {} and result type: {} = {}".format(result_file, result_type, match))
+                        self.logger.error("Match for result file: {} and result type: {} = {}"
+                            .format(result_file, result_type, match))
             assert(len(list_downloaded_files) > 0)
         except bioblend.galaxy.datasets.DatasetTimeoutException:
             self.logger.error("Failed to download {0}".format(res))
@@ -548,7 +549,7 @@ class galaxy(Thread):
                     self.task_file))
 
         # Add galaxy info
-        print(self.data_task)
+        #print(self.data_task)
         self.data_task['data_history_name'] = data_history_name
         self.data_task['result_history_name'] = result_history_name
         self.logger.info("Starting dump of {0}".format(
@@ -573,7 +574,7 @@ class galaxy(Thread):
         list_result['tsv'] += [i + "_annotation"  for i in list_result['biom']]
         list_result['nhx'] = [i + "_tree"  for i in list_result['biom']]
         # Check file size
-        if self.data_task:
+        if self.data_task != None:
             # Output result
             #result_file = self.done_dir + os.sep + self.data_task["name"] + ".tar.gz"
             
@@ -665,8 +666,10 @@ class galaxy(Thread):
                             # paired end with host
                             if self.data_task['host'] != "" and self.data_task["paired"]:
                                 params = {
-                                    "3":{"reference_genome|index":self.data_task["host"]},
-                                    "5": quality_dict,
+                                    # From 3 to 4
+                                    "4":{"reference_genome|index":self.data_task["host"]},
+                                    # From 5 to 3
+                                    "3": quality_dict,
                                     "7":{
                                     'pattern|sub_pattern': self.data_task["pattern_R1"],
                                     'max_amplicon_length':self.data_task["maxampliconlength"]},
@@ -790,8 +793,10 @@ class galaxy(Thread):
                             # single end with host
                             elif self.data_task['host'] != "" and not self.data_task["paired"]:
                                 params={
-                                    "2":{"reference_genome|index":self.data_task["host"]},
-                                    "4":quality_dict,
+                                    # 2 to 3
+                                    "3":{"reference_genome|index":self.data_task["host"]},
+                                    # 4 to 2
+                                    "2":quality_dict,
                                     "5":{'max_amplicon_length':self.data_task["maxampliconlength"]},
                                     "7": derep_dict,
                                     "8":{'sorting_mode|minsize':self.data_task["minabundance"]},
@@ -985,7 +990,7 @@ def getArguments():
                                      "{0} -h".format(sys.argv[0]))
     parser.add_argument('-u', dest='galaxy_url', type=str, #required=True,
                         default='https://galaxy.pasteur.fr',
-                        #default='https://galaxy-dev.web.pasteur.fr',
+                        #default='https://galaxy-dev.pasteur.fr',
                         #default='https://maestro-galaxy-dev.maestro.pasteur.fr',
                         #default='http://127.0.0.1:8080',
                         help='Url to galaxy.')

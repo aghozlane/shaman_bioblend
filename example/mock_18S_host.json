@@ -1,0 +1,9 @@
+{
+  "paired": true,
+  "path_R1": "/Volumes/BioIT/amine/test_galaxy/mock_R1",
+  "path_R2": "/Volumes/BioIT/amine/test_galaxy/mock_R2",
+  "host": "hg18",
+  "contaminant": "/Volumes/BioIT/amine/test_galaxy/alienTrimmerPF8contaminants.fasta",
+  "pattern_R1": "_R1",
+  "aCmax": 0.82, "aFmax": 0.945, "aGmin": 0.945, "minabundance": 4, "aFmin": 0.865, "type": "18S", "result_history_name": "shaman_test", "aCmin": 0.785, "dreptype": "--derep_prefix", "aOmin": 0.82, "phredthres": 20, "aSmin": 0.98, "aKmin": 0.75, "minreadlength": 50, "clusteringstrand": "both", "aPmax": 0.785, "clusteringthreshold": 0.97, "data_history_name": "data_shaman_test", "annotationstrand": "both", "aOmax": 0.865, "aPmin": 0.75,  "maxampliconlength": 0, "mail": "aghozlan@pasteur.fr", "mincorrect": 80, "name": "mock_18S_human", "minampliconlength": 50, "aGmax": 0.98
+}

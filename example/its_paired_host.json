@@ -2,7 +2,6 @@
   "paired": true,
   "path_R1": "/Volumes/BioIT/amine/test_galaxy/ITS_paired/R1",
   "path_R2": "/Volumes/BioIT/amine/test_galaxy/ITS_paired/R2",
-  "host": "",
   "type": "ITS",
   "mail": "amine.ghozlane@pasteur.fr",
   "contaminant": "/Volumes/BioIT/amine/test_galaxy/ITS_paired/file1c9a35528943d_contaminant.fasta",
@@ -11,5 +10,5 @@
   "aCmin": 0.785, "dreptype": "--derep_prefix", "aOmin": 0.82, "phredthres": 20, "aSmin": 0.98, "aKmin": 0.75, "minreadlength": 50, 
   "clusteringstrand": "both", "aPmax": 0.785, "clusteringthreshold": 0.97, "data_history_name": "data_shaman_test", 
   "annotationstrand": "both", "aOmax": 0.865, "aPmin": 0.75,  "maxampliconlength": 0, "mincorrect": 80, 
-  "name": "ITS_paired", "minampliconlength": 50, "aGmax": 0.98
+  "name": "ITS_paired_host", "minampliconlength": 50, "aGmax": 0.98
 }
