@@ -188,7 +188,10 @@ class galaxy(Thread):
                         dataset = self.gi.histories.upload_dataset_from_library(
                                         history['id'], lib_dataset[0]['id'])
                     else:
-                        dataset = self.gi.tools.upload_file(fastq_file, history_id)
+                        if fastq_file.endswith(".gz"):
+                            dataset = self.gi.tools.upload_file(fastq_file, history_id, file_type="fastq.gz")
+                        else: 
+                            dataset = self.gi.tools.upload_file(fastq_file, history_id)
                     if 'outputs' in dataset:
                         if "id" in dataset['outputs'][0]:
                             send_is_ok = True
